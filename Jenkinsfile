@@ -28,5 +28,25 @@ junit 'test-reports/results.xml'
 }
 }
 }
+stage('Deliver') {
+agent any
+environment {
+VOLUME = '$(pwd)/sources:/src'
+IMAGE = 'cdrx/pyinstaller-linux:python3'
+}
+steps {
+dir(path: env.BUILD_ID) {
+unstash(name: 'compiled-results')
+sh "docker run --rm -v ${VOLUME} ${IMAGE} 'pyinstaller -F main.py'"
+}
+}
+post {
+success {
+archiveArtifacts "${env.BUILD_ID}/sources/dist/main"
+sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
+}
+}
+}
+
 }
 }
